@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Central de Vendas — Painel de Turmas FHT 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--txt:#e2e8f0;--mut:#94a3b8;--acc:#3b82f6;--grn:#22c55e;--red:#ef4444;--amb:#f59e0b;--vio:#a78bfa;--brd:#334155}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--txt);padding:24px;max-width:1440px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--brd);padding-bottom:16px}
+h1{font-size:22px;font-weight:700}
+.sub{color:var(--mut);font-size:13px;margin-top:4px}
+.badge{background:var(--card2);color:var(--mut);padding:6px 12px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:8px}
+.dot{width:11px;height:11px;border-radius:50%;cursor:pointer;position:relative;flex:none;border:2px solid transparent}
+.dot.none{background:#64748b}
+.dot.chg{background:var(--amb);box-shadow:0 0 0 0 rgba(245,158,11,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}70%{box-shadow:0 0 0 7px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+.pop{position:absolute;top:calc(100% + 10px);right:0;width:340px;max-height:340px;overflow:auto;background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px;z-index:50;box-shadow:0 12px 30px rgba(0,0,0,.4);text-align:left}
+.pop h4{font-size:13px;margin-bottom:4px}
+.pop .peri{color:var(--mut);font-size:11px;margin-bottom:10px}
+.pop .chgitem{font-size:12px;padding:8px 0;border-top:1px solid var(--brd);color:var(--txt)}
+.pop .chgitem b{color:var(--amb)}
+.pop .empty{color:var(--mut);font-size:12px;padding:6px 0}
+.popwrap{position:relative}
+.sec{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px}
+.kpi .lbl{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .val{font-size:22px;font-weight:700;margin-top:6px}
+.kpi .val.sm{font-size:18px}
+.kpi .hint{color:var(--mut);font-size:10.5px;margin-top:3px}
+#kpis1{grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+#kpis1 .kpi{padding:9px 8px}
+#kpis1 .val{margin-top:3px}
+@media(max-width:980px){#kpis1{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}}
+.kpi.grn .val{color:var(--grn)}.kpi.red .val{color:var(--red)}.kpi.amb .val{color:var(--amb)}.kpi.acc .val{color:var(--acc)}.kpi.vio .val{color:var(--vio)}
+/* accordion */
+.acc-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;align-items:start}
+.acc{border:1px solid var(--brd);border-radius:12px;overflow:hidden;background:var(--card)}
+.acc>summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;user-select:none}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:hover{background:var(--card2)}
+.acc .chev{color:var(--mut);transition:transform .2s;font-size:12px}
+.acc[open] .chev{transform:rotate(90deg)}
+.acc .body{padding:0 16px 16px}
+.acc .prev{color:var(--mut);font-weight:400;font-size:12px;margin-left:10px}
+.filters{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
+.filters button{background:var(--card);color:var(--mut);border:1px solid var(--brd);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px}
+.filters button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:8px}
+.panel{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:18px}
+.panel h3{font-size:14px;margin-bottom:14px}
+.panel.wide{grid-column:1/-1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--brd);white-space:nowrap}
+th{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.2px}
+th:first-child,td:first-child{text-align:left}
+td.name{font-weight:600}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.pill.im{background:rgba(59,130,246,.15);color:#93c5fd}.pill.re{background:rgba(245,158,11,.15);color:#fcd34d}.pill.sa{background:rgba(167,139,250,.15);color:#c4b5fd}.pill.la{background:rgba(34,197,94,.15);color:#86efac}.pill.mm{background:rgba(236,72,153,.15);color:#f9a8d4}
+.q{color:#22c55e}.a{color:#f59e0b}.i{color:#ef4444}.t1{color:#fca5a5}.t2{color:#f87171}.soc{color:#cbd5e1}
+.arw-all{cursor:pointer;user-select:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:var(--acc);color:#fff;font-size:11px;font-weight:bold;margin-left:5px;transition:transform .15s;vertical-align:middle}
+.arw-all:hover{filter:brightness(1.15)}
+.arw-all.open{transform:rotate(90deg)}
+.canc-det{color:var(--mut);font-size:11px}
+.grp{cursor:pointer;background:var(--card2)}
+.grp:hover{filter:brightness(1.12)}
+.grp td{font-weight:700}
+.garw{display:inline-block;width:14px;color:var(--acc);font-size:11px}
+.grow .name{padding-left:22px;font-weight:500}
+.atv-det{color:var(--mut);font-size:11px}
+.drow-arw{display:inline-block;width:12px;color:var(--acc);font-size:10px}
+.grow{cursor:pointer}
+.grow:hover{background:var(--card2)}
+.det-row td{background:#16202e;padding:14px 16px}
+.detwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.chip{background:var(--card);border:1px solid var(--brd);border-radius:8px;padding:8px 10px;text-align:left}
+.chip .cl{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+.chip .cv{font-size:15px;font-weight:700;margin-top:3px}
+.chip .cv.grn{color:var(--grn)}.chip .cv.red{color:var(--red)}.chip .cv.amb{color:var(--amb)}.chip .cv.acc{color:var(--acc)}
+tr.tot td{font-weight:700;border-top:2px solid var(--brd);background:var(--card2)}
+.divh{border-left:2px solid var(--brd)}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.acc-row{grid-template-columns:1fr}}
+canvas{max-height:280px}
+</style>
+</head>
+<body>
+<header>
+<div><h1>Central de Vendas — Painel de Turmas FHT 2026</h1><div class="sub">Imersões, renovações e SALES · dados extraídos da Central de Vendas</div></div>
+<div class="popwrap"><div class="badge">Atualizado em <b id="upd"></b><span class="dot none" id="dot" onclick="togglePop(event)" title="Diferenças desde a última atualização"></span></div>
+<div class="pop" id="pop" style="display:none"></div></div>
+</header>
+
+<div class="sec">Consolidado — carteira</div>
+<div class="kpis" id="kpis1"></div>
+
+<div class="acc-row">
+<details class="acc" id="boxSt">
+<summary><span>Situação de pagamento <span class="prev" id="prev2"></span></span><span class="chev">▶</span></summary>
+<div class="body"><div class="kpis" id="kpis2"></div>
+<div class="panel" style="margin-top:12px"><h3>Situação de pagamento por turma</h3><canvas id="cSt"></canvas></div></div>
+</details>
+
+<details class="acc" id="boxCanc">
+<summary><span>Tipos de cancelamento <span class="prev" id="prev3"></span></span><span class="chev">▶</span></summary>
+<div class="body"><div class="kpis" id="kpis3"></div>
+<div class="panel" style="margin-top:12px"><h3>Cancelamentos por tipo (Tipo 1 &lt; 5k · Tipo 2 &ge; 5k)</h3><canvas id="cCanc"></canvas></div></div>
+</details>
+</div>
+
+<div class="filters">
+<button data-f="all" class="on">Todas</button>
+<button data-f="Imersão">Imersões</button>
+<button data-f="Renovação">Renovações</button>
+<button data-f="SALES">SALES</button>
+<button data-f="MASTERMIND">MASTERMIND</button>
+</div>
+<div class="grid">
+<div class="panel"><h3>Headcount por turma — Ativos × Cancelados</h3><canvas id="cHc"></canvas></div>
+<div class="panel"><h3>Composição da carteira (R$)</h3><canvas id="cComp"></canvas></div>
+</div>
+<div class="panel wide" style="margin-top:18px">
+<h3>Detalhe por turma</h3>
+<div style="overflow-x:auto"><table id="tbl"><thead><tr>
+<th>Turma</th><th>Tipo</th><th>HC</th>
+<th>Ativos <span class="arw-all" id="arwAtv" onclick="toggleAllAtv(this)" title="Ver Quitado / Adimplente / Inadimplente de todas">▸</span></th>
+<th>Cancel. <span class="arw-all" id="arwAll" onclick="toggleAllCanc(this)" title="Ver Tipo 1 / Tipo 2 de todas">▸</span></th>
+<th class="divh">% Ativos</th><th>Contrato</th><th>Recebido</th><th>% Rec.</th><th>A Receber</th><th>Perdido</th><th>Ticket</th>
+</tr></thead><tbody></tbody></table></div>
+<div style="color:var(--mut);font-size:11px;margin-top:8px">Tipo 1 = cancelado que pagou menos de R$ 5.000 · Tipo 2 = cancelado que pagou R$ 5.000 ou mais.</div>
+</div>
+<script>
+const DATA={"atualizado": "13/07/2026", "status_keys": ["Quitado", "Adimplente", "Inadimplente", "Cancelado", "Inativo"], "consolidado": {"nome": "CONSOLIDADO", "tipo": "Total", "cidade": "", "mes": "", "headcount": 923, "ativos": 492, "cancelados": 430, "contrato": 57096383.15, "recebido": 18074154.7, "a_receber": 11431316.54, "perdido": 27682388.63, "pct_ativos": 0.533, "pct_cancel": 0.4659, "pct_recebido": 0.3166, "ticket": 61859.57, "status": {"Quitado": 253, "Adimplente": 160, "Inadimplente": 79, "Cancelado": 430, "Inativo": 1}, "canc_t1": 258, "canc_t2": 104, "canc_zero": 84, "canc_socio": 68, "pct_t1": 0.6, "pct_t2": 0.2419, "mm_hc": 116, "mm_contrato": 5438101.92}, "turmas": [{"nome": "IMI CWB SET 25", "tipo": "Imersão", "cidade": "Curitiba", "mes": "SET", "headcount": 64, "ativos": 11, "cancelados": 53, "contrato": 4318324.5, "recebido": 783075.0, "a_receber": 4900.0, "perdido": 3530349.5, "pct_ativos": 0.1719, "pct_cancel": 0.8281, "pct_recebido": 0.1813, "ticket": 67473.82, "status": {"Quitado": 10, "Adimplente": 1, "Inadimplente": 0, "Cancelado": 53, "Inativo": 0}, "canc_t1": 23, "canc_t2": 19, "canc_zero": 2, "canc_socio": 11, "pct_t1": 0.434, "pct_t2": 0.3585, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI GYN SET 25", "tipo": "Imersão", "cidade": "Goiânia", "mes": "SET", "headcount": 60, "ativos": 14, "cancelados": 46, "contrato": 3840524.38, "recebido": 828522.9, "a_receber": 14850.0, "perdido": 3002266.06, "pct_ativos": 0.2333, "pct_cancel": 0.7667, "pct_recebido": 0.2157, "ticket": 64008.74, "status": {"Quitado": 10, "Adimplente": 4, "Inadimplente": 0, "Cancelado": 46, "Inativo": 0}, "canc_t1": 25, "canc_t2": 13, "canc_zero": 7, "canc_socio": 8, "pct_t1": 0.5435, "pct_t2": 0.2826, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI SP NOV 25", "tipo": "Imersão", "cidade": "São Paulo", "mes": "NOV", "headcount": 140, "ativos": 59, "cancelados": 81, "contrato": 9560698.46, "recebido": 3793984.13, "a_receber": 334881.0, "perdido": 5431833.33, "pct_ativos": 0.4214, "pct_cancel": 0.5786, "pct_recebido": 0.3968, "ticket": 68290.7, "status": {"Quitado": 45, "Adimplente": 11, "Inadimplente": 3, "Cancelado": 81, "Inativo": 0}, "canc_t1": 31, "canc_t2": 34, "canc_zero": 6, "canc_socio": 16, "pct_t1": 0.3827, "pct_t2": 0.4198, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI RJ JAN 26", "tipo": "Imersão", "cidade": "Rio de Janeiro", "mes": "JAN", "headcount": 73, "ativos": 37, "cancelados": 36, "contrato": 4492476.8, "recebido": 1785524.24, "a_receber": 462167.5, "perdido": 2246785.06, "pct_ativos": 0.5068, "pct_cancel": 0.4932, "pct_recebido": 0.3974, "ticket": 61540.78, "status": {"Quitado": 23, "Adimplente": 9, "Inadimplente": 5, "Cancelado": 36, "Inativo": 0}, "canc_t1": 23, "canc_t2": 10, "canc_zero": 6, "canc_socio": 3, "pct_t1": 0.6389, "pct_t2": 0.2778, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI SP JAN 26", "tipo": "Imersão", "cidade": "São Paulo", "mes": "JAN", "headcount": 96, "ativos": 45, "cancelados": 51, "contrato": 6000865.51, "recebido": 1823397.01, "a_receber": 493278.0, "perdido": 3684190.5, "pct_ativos": 0.4688, "pct_cancel": 0.5312, "pct_recebido": 0.3039, "ticket": 62509.02, "status": {"Quitado": 33, "Adimplente": 10, "Inadimplente": 2, "Cancelado": 51, "Inativo": 0}, "canc_t1": 35, "canc_t2": 6, "canc_zero": 7, "canc_socio": 10, "pct_t1": 0.6863, "pct_t2": 0.1176, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI RJ MAR 26", "tipo": "Imersão", "cidade": "Rio de Janeiro", "mes": "MAR", "headcount": 30, "ativos": 15, "cancelados": 15, "contrato": 1913645.82, "recebido": 683607.12, "a_receber": 327363.7, "perdido": 902675.0, "pct_ativos": 0.5, "pct_cancel": 0.5, "pct_recebido": 0.3572, "ticket": 63788.19, "status": {"Quitado": 8, "Adimplente": 3, "Inadimplente": 4, "Cancelado": 15, "Inativo": 0}, "canc_t1": 7, "canc_t2": 3, "canc_zero": 0, "canc_socio": 5, "pct_t1": 0.4667, "pct_t2": 0.2, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI SP MAR 26", "tipo": "Imersão", "cidade": "São Paulo", "mes": "MAR", "headcount": 24, "ativos": 9, "cancelados": 15, "contrato": 1733878.46, "recebido": 386618.7, "a_receber": 160259.76, "perdido": 1187000.0, "pct_ativos": 0.375, "pct_cancel": 0.625, "pct_recebido": 0.223, "ticket": 72244.94, "status": {"Quitado": 4, "Adimplente": 1, "Inadimplente": 4, "Cancelado": 15, "Inativo": 0}, "canc_t1": 12, "canc_t2": 2, "canc_zero": 0, "canc_socio": 1, "pct_t1": 0.8, "pct_t2": 0.1333, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI BSB ABR 26", "tipo": "Imersão", "cidade": "Brasília", "mes": "ABR", "headcount": 22, "ativos": 10, "cancelados": 12, "contrato": 1565614.0, "recebido": 474777.0, "a_receber": 311120.0, "perdido": 818717.0, "pct_ativos": 0.4545, "pct_cancel": 0.5455, "pct_recebido": 0.3033, "ticket": 71164.27, "status": {"Quitado": 4, "Adimplente": 4, "Inadimplente": 2, "Cancelado": 12, "Inativo": 0}, "canc_t1": 10, "canc_t2": 1, "canc_zero": 2, "canc_socio": 1, "pct_t1": 0.8333, "pct_t2": 0.0833, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI BH JUN 26", "tipo": "Imersão", "cidade": "Belo Horizonte", "mes": "JUN", "headcount": 37, "ativos": 27, "cancelados": 10, "contrato": 2596500.0, "recebido": 546837.4, "a_receber": 1213662.6, "perdido": 838000.0, "pct_ativos": 0.7297, "pct_cancel": 0.2703, "pct_recebido": 0.2106, "ticket": 70175.68, "status": {"Quitado": 8, "Adimplente": 14, "Inadimplente": 5, "Cancelado": 10, "Inativo": 0}, "canc_t1": 9, "canc_t2": 0, "canc_zero": 4, "canc_socio": 1, "pct_t1": 0.9, "pct_t2": 0.0, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI SP JUN 26", "tipo": "Imersão", "cidade": "São Paulo", "mes": "JUN", "headcount": 48, "ativos": 34, "cancelados": 14, "contrato": 3201250.0, "recebido": 813000.0, "a_receber": 1635750.0, "perdido": 752500.0, "pct_ativos": 0.7083, "pct_cancel": 0.2917, "pct_recebido": 0.254, "ticket": 66692.71, "status": {"Quitado": 9, "Adimplente": 13, "Inadimplente": 12, "Cancelado": 14, "Inativo": 0}, "canc_t1": 12, "canc_t2": 0, "canc_zero": 10, "canc_socio": 2, "pct_t1": 0.8571, "pct_t2": 0.0, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "IMI RJ JUL 26", "tipo": "Imersão", "cidade": "Rio de Janeiro", "mes": "JUL", "headcount": 24, "ativos": 21, "cancelados": 2, "contrato": 1570750.0, "recebido": 527000.0, "a_receber": 1043750.0, "perdido": 0.0, "pct_ativos": 0.875, "pct_cancel": 0.0833, "pct_recebido": 0.3355, "ticket": 65447.92, "status": {"Quitado": 4, "Adimplente": 16, "Inadimplente": 1, "Cancelado": 2, "Inativo": 1}, "canc_t1": 2, "canc_t2": 0, "canc_zero": 2, "canc_socio": 0, "pct_t1": 1.0, "pct_t2": 0.0, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "RENOV NOV 25", "tipo": "Renovação", "cidade": "", "mes": "NOV", "headcount": 25, "ativos": 17, "cancelados": 8, "contrato": 817179.0, "recebido": 517939.5, "a_receber": 92248.5, "perdido": 208991.0, "pct_ativos": 0.68, "pct_cancel": 0.32, "pct_recebido": 0.6338, "ticket": 32687.16, "status": {"Quitado": 14, "Adimplente": 3, "Inadimplente": 0, "Cancelado": 8, "Inativo": 0}, "canc_t1": 5, "canc_t2": 1, "canc_zero": 1, "canc_socio": 2, "pct_t1": 0.625, "pct_t2": 0.125, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "RENOV FEV 26", "tipo": "Renovação", "cidade": "", "mes": "FEV", "headcount": 11, "ativos": 8, "cancelados": 3, "contrato": 360615.09, "recebido": 295868.58, "a_receber": 6749.51, "perdido": 57997.0, "pct_ativos": 0.7273, "pct_cancel": 0.2727, "pct_recebido": 0.8205, "ticket": 32783.19, "status": {"Quitado": 6, "Adimplente": 2, "Inadimplente": 0, "Cancelado": 3, "Inativo": 0}, "canc_t1": 1, "canc_t2": 1, "canc_zero": 0, "canc_socio": 1, "pct_t1": 0.3333, "pct_t2": 0.3333, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "RENOV JUN 26", "tipo": "Renovação", "cidade": "", "mes": "JUN", "headcount": 29, "ativos": 29, "cancelados": 0, "contrato": 1096928.0, "recebido": 439488.0, "a_receber": 687438.5, "perdido": 0.0, "pct_ativos": 1.0, "pct_cancel": 0.0, "pct_recebido": 0.4007, "ticket": 37825.1, "status": {"Quitado": 8, "Adimplente": 12, "Inadimplente": 9, "Cancelado": 0, "Inativo": 0}, "canc_t1": 0, "canc_t2": 0, "canc_zero": 0, "canc_socio": 0, "pct_t1": 0, "pct_t2": 0, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "SALES 2025", "tipo": "SALES", "cidade": "", "mes": "", "headcount": 62, "ativos": 6, "cancelados": 56, "contrato": 4108386.0, "recebido": 479468.69, "a_receber": 66196.31, "perdido": 3564721.0, "pct_ativos": 0.0968, "pct_cancel": 0.9032, "pct_recebido": 0.1167, "ticket": 66264.29, "status": {"Quitado": 3, "Adimplente": 3, "Inadimplente": 0, "Cancelado": 56, "Inativo": 0}, "canc_t1": 48, "canc_t2": 5, "canc_zero": 28, "canc_socio": 3, "pct_t1": 0.8571, "pct_t2": 0.0893, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "SALES 2026", "tipo": "SALES", "cidade": "", "mes": "", "headcount": 33, "ativos": 29, "cancelados": 4, "contrato": 1885747.54, "recebido": 857048.67, "a_receber": 754962.51, "perdido": 280100.0, "pct_ativos": 0.8788, "pct_cancel": 0.1212, "pct_recebido": 0.4545, "ticket": 57143.86, "status": {"Quitado": 13, "Adimplente": 11, "Inadimplente": 5, "Cancelado": 4, "Inativo": 0}, "canc_t1": 0, "canc_t2": 4, "canc_zero": 0, "canc_socio": 0, "pct_t1": 0.0, "pct_t2": 1.0, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "FORMULA 02", "tipo": "SALES", "cidade": "", "mes": "", "headcount": 29, "ativos": 24, "cancelados": 5, "contrato": 2594897.67, "recebido": 742185.57, "a_receber": 1405112.06, "perdido": 447600.04, "pct_ativos": 0.8276, "pct_cancel": 0.1724, "pct_recebido": 0.286, "ticket": 89479.23, "status": {"Quitado": 4, "Adimplente": 13, "Inadimplente": 7, "Cancelado": 5, "Inativo": 0}, "canc_t1": 2, "canc_t2": 3, "canc_zero": 1, "canc_socio": 0, "pct_t1": 0.4, "pct_t2": 0.6, "mm_hc": 0, "mm_contrato": 0.0}, {"nome": "MASTERMIND NOV 25", "tipo": "MASTERMIND", "cidade": "", "mes": "NOV", "headcount": 45, "ativos": 33, "cancelados": 12, "contrato": 2339300.08, "recebido": 1188485.39, "a_receber": 623866.69, "perdido": 528948.0, "pct_ativos": 0.7333, "pct_cancel": 0.2667, "pct_recebido": 0.5081, "ticket": 51984.45, "status": {"Quitado": 14, "Adimplente": 12, "Inadimplente": 7, "Cancelado": 12, "Inativo": 0}, "canc_t1": 9, "canc_t2": 1, "canc_zero": 6, "canc_socio": 2, "pct_t1": 0.75, "pct_t2": 0.0833, "mm_hc": 45, "mm_contrato": 2339300.08}, {"nome": "MASTERMIND FEV 26", "tipo": "MASTERMIND", "cidade": "", "mes": "FEV", "headcount": 11, "ativos": 9, "cancelados": 2, "contrato": 652005.72, "recebido": 409679.89, "a_receber": 131610.68, "perdido": 110715.15, "pct_ativos": 0.8182, "pct_cancel": 0.1818, "pct_recebido": 0.6283, "ticket": 59273.25, "status": {"Quitado": 6, "Adimplente": 3, "Inadimplente": 0, "Cancelado": 2, "Inativo": 0}, "canc_t1": 0, "canc_t2": 1, "canc_zero": 0, "canc_socio": 1, "pct_t1": 0.0, "pct_t2": 0.5, "mm_hc": 11, "mm_contrato": 652005.72}, {"nome": "MASTERMIND JUN 26", "tipo": "MASTERMIND", "cidade": "", "mes": "JUN", "headcount": 60, "ativos": 55, "cancelados": 5, "contrato": 2446796.12, "recebido": 697646.91, "a_receber": 1661149.22, "perdido": 88999.99, "pct_ativos": 0.9167, "pct_cancel": 0.0833, "pct_recebido": 0.2851, "ticket": 40779.94, "status": {"Quitado": 27, "Adimplente": 15, "Inadimplente": 13, "Cancelado": 5, "Inativo": 0}, "canc_t1": 4, "canc_t2": 0, "canc_zero": 2, "canc_socio": 1, "pct_t1": 0.8, "pct_t2": 0.0, "mm_hc": 60, "mm_contrato": 2446796.12}]};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const pct=v=>(v*100).toFixed(1)+'%';
+document.getElementById('upd').textContent=DATA.atualizado;
+// Diferenças entre atualizações (preenchido a cada nova extração). changes=[] => primeira leitura / sem mudanças.
+const DIFF={"prev_data": "08/07/2026", "periodo": "5 dias", "changes": ["IMI GYN SET 25: recebido +R$ 14.850", "IMI SP NOV 25: cancelamentos 80→81 (+1)", "IMI SP NOV 25: recebido +R$ 91.972", "IMI RJ JAN 26: +1 no headcount (72→73)", "IMI SP JAN 26: recebido +R$ 10.300", "IMI BSB ABR 26: -1 no headcount (23→22)", "IMI BH JUN 26: recebido +R$ 104.335", "IMI SP JUN 26: +1 no headcount (47→48)", "IMI SP JUN 26: cancelamentos 9→14 (+5)", "IMI RJ JUL 26: cancelamentos 0→2 (+2)", "IMI RJ JUL 26: recebido +R$ 292.000", "RENOV JUN 26: +1 no headcount (88→89)", "SALES 2026: +2 no headcount (31→33)", "FORMULA 02: cancelamentos 5→6 (+1)", "FORMULA 02: recebido +R$ 2.997"]};
+(function renderPop(){
+ const dot=document.getElementById('dot'), pop=document.getElementById('pop');
+ const has=DIFF.changes && DIFF.changes.length>0;
+ dot.className='dot '+(has?'chg':'none');
+ let html;
+ if(!DIFF.prev_data){
+   html=`<h4>Primeira leitura registrada</h4><div class="peri">Baseline em ${DATA.atualizado}</div><div class="empty">As diferenças em relação à leitura anterior aparecerão aqui a partir da próxima atualização.</div>`;
+ }else if(!has){
+   html=`<h4>Sem mudanças relevantes</h4><div class="peri">${DIFF.periodo||''}</div><div class="empty">Nenhuma variação importante desde ${DIFF.prev_data}.</div>`;
+ }else{
+   html=`<h4>Mudanças desde a última atualização</h4><div class="peri">${DIFF.prev_data} → ${DATA.atualizado}${DIFF.periodo?' · '+DIFF.periodo:''}</div>`
+     +DIFF.changes.map(c=>`<div class="chgitem">${c}</div>`).join('');
+ }
+ pop.innerHTML=html;
+})();
+function togglePop(e){e.stopPropagation();const p=document.getElementById('pop');p.style.display=p.style.display==='none'?'block':'none';}
+document.addEventListener('click',e=>{const p=document.getElementById('pop');if(p&&!e.target.closest('.popwrap'))p.style.display='none';});
+const C=DATA.consolidado,S=C.status;
+const k1=[['Headcount',C.headcount,'acc',''],['Headcount ativos',C.ativos,'grn',''],['Contrato',brl(C.contrato),'sm',''],['Recebido',brl(C.recebido),'grn sm',''],['A Receber',brl(C.a_receber),'amb sm',''],['Perdido (cancel.)',brl(C.perdido),'red sm',''],['% Perdido',pct(C.contrato?C.perdido/C.contrato:0),'red','do contrato'],['% Ativos',pct(C.pct_ativos),'grn',''],['Ticket Médio',brl(C.ticket),'sm','']];
+const k2=[['Quitado',S.Quitado,'grn',''],['Adimplente',S.Adimplente,'amb',''],['Inadimplente',S.Inadimplente,'red',''],['Cancelado',S.Cancelado,'red',''],['Inativo',S.Inativo,'','']];
+const k3=[['Cancelamentos',C.cancelados,'red',''],['Tipo 1 (&lt; 5k)',C.canc_t1,'amb',pct(C.pct_t1)+' dos cancel.'],['Tipo 2 (&ge; 5k)',C.canc_t2,'red',pct(C.pct_t2)+' dos cancel.'],['Sócio (dupla)',C.canc_socio,'','contrato na dupla'],['Sem pagamento (R$0)',C.canc_zero,'','subconjunto do T1']];
+const cls=c=>c.includes('grn')?'grn':c.includes('red')?'red':c.includes('amb')?'amb':c.includes('acc')?'acc':c.includes('vio')?'vio':'';
+const render=(id,arr)=>document.getElementById(id).innerHTML=arr.map(k=>`<div class="kpi ${cls(k[2])}"><div class="lbl">${k[0]}</div><div class="val ${k[2].includes('sm')?'sm':''}">${k[1]}</div>${k[3]?`<div class="hint">${k[3]}</div>`:''}</div>`).join('');
+render('kpis1',k1);render('kpis2',k2);render('kpis3',k3);
+// prévias nos títulos das caixas
+document.getElementById('prev2').textContent=`· Quitado ${S.Quitado} · Adimpl. ${S.Adimplente} · Inadimpl. ${S.Inadimplente}`;
+document.getElementById('prev3').textContent=`· ${C.cancelados} cancel. · T1 ${C.canc_t1} · T2 ${C.canc_t2} · Sócio ${C.canc_socio}`;
+if(window.ChartDataLabels)Chart.register(ChartDataLabels);
+function toggleGrp(k){const grows=document.querySelectorAll('#tbl .grow.g_'+k);const dets=document.querySelectorAll('#tbl .det-row.g_'+k);const arw=document.getElementById('garw_'+k);const hidden=grows.length&&grows[0].style.display==='none';grows.forEach(r=>r.style.display=hidden?'':'none');dets.forEach(r=>r.style.display='none');document.querySelectorAll('#tbl .drow-arw').forEach(a=>a.textContent='▸');if(arw)arw.textContent=hidden?'▾':'▸';}
+function toggleDet(id){const d=document.getElementById('det_'+id);if(!d)return;const a=document.getElementById('darw_'+id);const show=d.style.display==='none';d.style.display=show?'':'none';if(a)a.textContent=show?'▾':'▸';}
+function toggleAllAtv(el){const open=el.classList.toggle('open');document.querySelectorAll('#tbl .atv-det').forEach(d=>{if(open)d.removeAttribute('hidden');else d.setAttribute('hidden','');});}
+function applyAtvState(){const aa=document.getElementById('arwAtv');if(aa&&aa.classList.contains('open'))document.querySelectorAll('#tbl .atv-det').forEach(d=>d.removeAttribute('hidden'));}
+function toggleAllCanc(el){const open=el.classList.toggle('open');document.querySelectorAll('#tbl .canc-det').forEach(d=>{if(open)d.removeAttribute('hidden');else d.setAttribute('hidden','');});}
+let charts={};
+function draw(f){
+ let t=DATA.turmas.filter(x=>f==='all'||x.tipo===f);
+ const labels=t.map(x=>x.nome),g='#22c55e',r='#ef4444',b='#3b82f6',a='#f59e0b',mut='#94a3b8';
+ const opt=leg=>({responsive:true,plugins:{legend:{display:leg,labels:{color:mut}},datalabels:{display:false}},scales:{x:{ticks:{color:mut},grid:{color:'#33415533'}},y:{ticks:{color:mut},grid:{color:'#33415533'}}}});
+ const stk={responsive:true,plugins:{legend:{labels:{color:mut}},datalabels:{display:false}},scales:{x:{stacked:true,ticks:{color:mut},grid:{color:'#33415533'}},y:{stacked:true,ticks:{color:mut},grid:{color:'#33415533'}}}};
+ Object.values(charts).forEach(c=>c.destroy());
+ charts.hc=new Chart(cHc,{type:'bar',data:{labels,datasets:[{label:'Ativos',data:t.map(x=>x.ativos),backgroundColor:g},{label:'Cancelados',data:t.map(x=>x.cancelados),backgroundColor:r}]},options:stk});
+ charts.st=new Chart(cSt,{type:'bar',data:{labels,datasets:[{label:'Quitado',data:t.map(x=>x.status.Quitado),backgroundColor:g},{label:'Adimplente',data:t.map(x=>x.status.Adimplente),backgroundColor:a},{label:'Inadimplente',data:t.map(x=>x.status.Inadimplente),backgroundColor:r},{label:'Cancelado',data:t.map(x=>x.status.Cancelado),backgroundColor:'#64748b'}]},options:stk});
+ charts.canc=new Chart(cCanc,{type:'bar',data:{labels,datasets:[{label:'Tipo 1 (< 5k)',data:t.map(x=>x.canc_t1),backgroundColor:a},{label:'Tipo 2 (>= 5k)',data:t.map(x=>x.canc_t2),backgroundColor:r},{label:'Sócio (dupla)',data:t.map(x=>x.canc_socio),backgroundColor:'#64748b'}]},options:stk});
+ const sc=t.reduce((s,x)=>{s.re+=x.recebido;s.ar+=x.a_receber;s.pe+=x.perdido;return s;},{re:0,ar:0,pe:0});
+ const compTot=sc.re+sc.ar+sc.pe;
+ charts.comp=new Chart(cComp,{type:'doughnut',data:{labels:['Recebido','A Receber','Perdido (cancelado)'],datasets:[{data:[sc.re,sc.ar,sc.pe],backgroundColor:[g,a,r],borderWidth:0}]},options:{responsive:true,layout:{padding:12},plugins:{
+   legend:{position:'bottom',labels:{color:mut}},
+   tooltip:{callbacks:{label:c=>` ${c.label}: ${brl(c.raw)} (${pct(c.raw/compTot)})`}},
+   datalabels:{display:false}
+ }}});
+ const tb=document.querySelector('#tbl tbody');
+ const GORDER=['Imersões 2025','Imersões 2026','Renovações','SALES','MASTERMIND'];
+ const grpOf=x=> x.tipo==='Renovação'?'Renovações' : x.tipo==='SALES'?'SALES' : x.tipo==='MASTERMIND'?'MASTERMIND' : (/25$/.test(x.nome)?'Imersões 2025':'Imersões 2026');
+ const gkey=s=>s.replace(/[^a-z0-9]/gi,'');
+ const atvD=(q,a,i)=>`<span class="atv-det" hidden> · <span class="q">Q ${q}</span> · <span class="a">A ${a}</span> · <span class="i">I ${i}</span></span>`;
+ const cancD=(t1,t2,so)=>`<span class="canc-det" hidden> · <span class="t1">T1 ${t1}</span> · <span class="t2">T2 ${t2}</span> · <span class="soc">Sócio ${so}</span></span>`;
+ const chip=(l,v,c)=>`<div class="chip"><div class="cl">${l}</div><div class="cv ${c||''}">${v}</div></div>`;
+ const detHtml=x=>`<div class="detwrap">`+chip('Headcount',x.headcount,'acc')+chip('Ativos',x.ativos,'grn')+chip('Cancelados',x.cancelados,'red')+chip('Quitado',x.status.Quitado,'')+chip('Adimplente',x.status.Adimplente,'')+chip('Inadimplente',x.status.Inadimplente,'')+chip('Canc. Tipo 1 (&lt;5k)',x.canc_t1,'')+chip('Canc. Tipo 2 (&ge;5k)',x.canc_t2,'')+chip('Sócio (dupla)',x.canc_socio,'')+chip('Sem pagamento',x.canc_zero,'')+chip('% Ativos',pct(x.pct_ativos),'grn')+chip('% Cancel.',pct(x.pct_cancel),'red')+chip('Ticket Médio',brl(x.ticket),'')+chip('Contrato',brl(x.contrato),'')+chip('Recebido',brl(x.recebido),'grn')+chip('% Recebido',pct(x.pct_recebido),'grn')+chip('A Receber',brl(x.a_receber),'amb')+chip('Perdido',brl(x.perdido),'red')+((x.mm_hc && x.tipo!=='MASTERMIND')?chip('MASTERMIND (HC)',x.mm_hc,'acc')+chip('Contrato MASTERMIND',brl(x.mm_contrato),''):'')+`</div>`;
+ const rowHtml=x=>{const id=gkey(x.nome);const gk=gkey(grpOf(x));return `<tr class="grow g_${gk}" onclick="toggleDet('${id}')"><td class="name"><span class="drow-arw" id="darw_${id}">▸</span> ${x.nome}</td><td><span class="pill ${x.tipo==='Imersão'?'im':x.tipo==='SALES'?'sa':x.tipo==='MASTERMIND'?'mm':'re'}">${x.tipo}</span></td><td>${x.headcount}</td><td>${x.ativos}${atvD(x.status.Quitado,x.status.Adimplente,x.status.Inadimplente)}</td><td>${x.cancelados}${cancD(x.canc_t1,x.canc_t2,x.canc_socio)}</td><td class="divh">${pct(x.pct_ativos)}</td><td>${brl(x.contrato)}</td><td>${brl(x.recebido)}</td><td>${pct(x.pct_recebido)}</td><td>${brl(x.a_receber)}</td><td>${brl(x.perdido)}</td><td>${brl(x.ticket)}</td></tr>`+`<tr class="det-row g_${gk}" id="det_${id}" style="display:none"><td colspan="12">${detHtml(x)}</td></tr>`;};
+ const subt=rows=>{const s={hc:0,at:0,ca:0,Q:0,A:0,I:0,t1:0,t2:0,socio:0,con:0,rec:0,ar:0,pe:0};rows.forEach(x=>{s.hc+=x.headcount;s.at+=x.ativos;s.ca+=x.cancelados;s.Q+=x.status.Quitado;s.A+=x.status.Adimplente;s.I+=x.status.Inadimplente;s.t1+=x.canc_t1;s.t2+=x.canc_t2;s.socio+=x.canc_socio;s.con+=x.contrato;s.rec+=x.recebido;s.ar+=x.a_receber;s.pe+=x.perdido;});return s;};
+ let html='';
+ GORDER.forEach(g=>{const rows=t.filter(x=>grpOf(x)===g);if(!rows.length)return;const s=subt(rows);const k=gkey(g);
+   html+=`<tr class="grp" onclick="toggleGrp('${k}')"><td class="name"><span class="garw" id="garw_${k}">▾</span> ${g} <span style="color:var(--mut);font-weight:400">(${rows.length})</span></td><td></td><td>${s.hc}</td><td>${s.at}${atvD(s.Q,s.A,s.I)}</td><td>${s.ca}${cancD(s.t1,s.t2,s.socio)}</td><td class="divh">${pct(s.hc?s.at/s.hc:0)}</td><td>${brl(s.con)}</td><td>${brl(s.rec)}</td><td>${pct(s.con?s.rec/s.con:0)}</td><td>${brl(s.ar)}</td><td>${brl(s.pe)}</td><td>${brl(s.hc?s.con/s.hc:0)}</td></tr>`;
+   html+=rows.map(rowHtml).join('');
+ });
+ if(f==='all') html+=`<tr class="tot"><td>CONSOLIDADO</td><td></td><td>${C.headcount}</td><td>${C.ativos}${atvD(S.Quitado,S.Adimplente,S.Inadimplente)}</td><td>${C.cancelados}${cancD(C.canc_t1,C.canc_t2,C.canc_socio)}</td><td class="divh">${pct(C.pct_ativos)}</td><td>${brl(C.contrato)}</td><td>${brl(C.recebido)}</td><td>${pct(C.pct_recebido)}</td><td>${brl(C.a_receber)}</td><td>${brl(C.perdido)}</td><td>${brl(C.ticket)}</td></tr>`;
+ tb.innerHTML=html;
+}
+function applyCancState(){const aa=document.getElementById('arwAll');if(aa&&aa.classList.contains('open'))document.querySelectorAll('#tbl .canc-det').forEach(d=>d.removeAttribute('hidden'));}
+draw('all');
+document.querySelectorAll('.filters button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');draw(btn.dataset.f);applyCancState();applyAtvState();});
+document.getElementById('boxCanc').addEventListener('toggle',e=>{if(e.target.open&&charts.canc)setTimeout(()=>charts.canc.resize(),10);});
+document.getElementById('boxSt').addEventListener('toggle',e=>{if(e.target.open&&charts.st)setTimeout(()=>charts.st.resize(),10);});
+</script>
+</body></html>
