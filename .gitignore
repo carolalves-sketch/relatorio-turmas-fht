@@ -1,0 +1,6 @@
+# Arquivos de dados/temporários que NÃO vão para o site
+*.xlsx
+*.xls
+*.csv
+*.pdf
+~$*
