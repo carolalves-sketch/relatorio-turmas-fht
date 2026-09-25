@@ -100,7 +100,7 @@ canvas{max-height:280px}
 (function(){var HASH=1324322723;var g=document.getElementById('fhtgate'),pw=document.getElementById('fhtpw'),err=document.getElementById('fhterr');document.body.style.overflow='hidden';function h(s){var x=5381;for(var i=0;i<s.length;i++){x=((x*33)+s.charCodeAt(i))>>>0;}return x;}function chk(){if(h(pw.value)===HASH){g.remove();document.body.style.overflow='';}else{err.style.visibility='visible';pw.value='';pw.focus();}}document.getElementById('fhtbtn').onclick=chk;pw.addEventListener('keydown',function(e){if(e.key==='Enter')chk();});pw.focus();})();
 </script>
 <header>
-<div><h1>Central de Vendas — Painel de Turmas FHT 2026</h1><div class="sub">Imersões, renovações, SALES, Mastermind, Light e Principia · dados extraídos da Central de Vendas</div></div>
+<div><h1>Central de Vendas — Painel de Turmas FHT 2026</h1><div class="sub">Imersões, renovações, retenções, SALES, Mastermind, Light e Principia · dados extraídos da Central de Vendas</div></div>
 <div class="popwrap"><div class="badge">Atualizado em <b id="upd"></b><span class="dot none" id="dot" onclick="togglePop(event)" title="Diferenças desde a última atualização"></span></div>
 <div class="pop" id="pop" style="display:none"></div></div>
 </header>
@@ -241,8 +241,8 @@ function draw(f){
    datalabels:{display:false}
  }}});
  const tb=document.querySelector('#tbl tbody');
- const GORDER=['Imersões 2025','Imersões 2026','Renovações','SALES','LIGHT','MASTERMIND','PRINCIPIA'];
- const grpOf=x=> x.tipo==='Renovação'?'Renovações' : x.tipo==='SALES'?'SALES' : x.tipo==='MASTERMIND'?'MASTERMIND' : x.tipo==='PRINCIPIA'?'PRINCIPIA' : x.tipo==='LIGHT'?'LIGHT' : (/25$/.test(x.nome)?'Imersões 2025':'Imersões 2026');
+ const GORDER=['Imersões 2025','Imersões 2026','Renovações','Retenções','SALES','LIGHT','MASTERMIND','PRINCIPIA'];
+ const grpOf=x=> x.tipo==='Renovação'?'Renovações' : x.tipo==='Retenção'?'Retenções' : x.tipo==='SALES'?'SALES' : x.tipo==='MASTERMIND'?'MASTERMIND' : x.tipo==='PRINCIPIA'?'PRINCIPIA' : x.tipo==='LIGHT'?'LIGHT' : (/25$/.test(x.nome)?'Imersões 2025':'Imersões 2026');
  const gkey=s=>s.replace(/[^a-z0-9]/gi,'');
  const atvD=(q,a,i)=>`<span class="atv-det" hidden> · <span class="q">Q ${q}</span> · <span class="a">A ${a}</span> · <span class="i">I ${i}</span></span>`;
  const cancD=(t1,t2,du)=>`<span class="canc-det" hidden> · <span class="t1">T1 ${t1}</span> · <span class="t2">T2 ${t2}</span> · <span class="soc">Duplas ${du}</span></span>`;
